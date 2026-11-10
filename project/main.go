@@ -17,8 +17,8 @@ type shop struct {
 }
 
 type result struct {
-	shop  string
-	price string
+	Shop  string
+	Price string
 }
 
 var page = template.Must(template.ParseFiles("index.html"))
@@ -41,15 +41,14 @@ func main() {
 			ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 			defer cancel()
 
-			data.Result = make([]result, len(shops))
+			data.Results = make([]result, len(shops))
 			var wg sync.WaitGroup
 
 			for i, s := range shops {
-				wg.Add(1)
-				go func(i int, s shop) {
-					defer wg.Done()
+
+				wg.Go(func() {
 					data.Results[i] = checkShop(ctx, s)
-				}(i, s)
+				})
 			}
 			wg.Wait()
 			bestCents := 0
@@ -67,4 +66,6 @@ func main() {
 			log.Print(err)
 		}
 	})
+	log.Println("Open http://localhost:8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
