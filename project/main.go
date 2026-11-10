@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -68,4 +69,21 @@ func main() {
 	})
 	log.Println("Open http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func checkShop(ctx context.Context, s shop) result {
+	timer := time.NewTimer(s.delay)
+	defer timer.Stop()
+
+	select {
+	case <-timer.C:
+		price := fmt.Sprintf("$%d.%02d", s.cents/100, s.cents%100)
+		return result{Shop: s.name, Price: price}
+	case <-ctx.Done():
+		status := "Canceled"
+		if ctx.Err() == context.DeadlineExceeded {
+			status = "Timed out"
+		}
+		return result{Shop: s.name, Price: status}
+	}
 }
